@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -20,6 +21,9 @@ export default async function AccountPage() {
         <dt>Phone</dt>
         <dd>{user.phone ?? "—"}</dd>
       </dl>
+      <p>
+        <Link href="/shop">Browse the shop</Link>
+      </p>
       <LogoutButton />
     </main>
   );

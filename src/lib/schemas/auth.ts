@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-export function firstIssueMessage(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "Invalid input.";
-}
+export { firstIssueMessage } from "./shared";
 
 // Admins are provisioned directly (seed data / future admin tooling), not
 // via self-signup.

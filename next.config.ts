@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      // Seed data placeholder images.
+      { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
+      // Real product image uploads (Phase 3).
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+    ],
+  },
 };
 
 export default withSentryConfig(nextConfig, {

@@ -7,8 +7,11 @@ export default function Home() {
       <main className={styles.main}>
         <h1>Glow Hub</h1>
         <p>
-          Marketplace skeleton is up. Storefront and checkout land in later
-          phases — see <code>docs/build-plan.md</code>.
+          Nigeria-based marketplace for beauty, fashion, and accessories.
+          Checkout lands in later phases — see <code>docs/build-plan.md</code>.
+        </p>
+        <p>
+          <Link href="/shop">Browse the shop</Link>
         </p>
         <p>
           <Link href="/login">Log in</Link> · <Link href="/signup">Sign up</Link>

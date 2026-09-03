@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -37,6 +38,9 @@ export default async function VendorDashboardPage() {
             : "Made to order"}
         </dd>
       </dl>
+      <p>
+        <Link href="/vendor/products">Manage products</Link>
+      </p>
       <LogoutButton />
     </main>
   );
