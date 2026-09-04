@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/categories";
 import type { ProductCategory } from "@/generated/prisma/enums";
+import { parseJsonResponse } from "@/lib/parseJsonResponse";
 import styles from "./ProductForm.module.css";
 
 type ProductFormValues = {
@@ -47,20 +48,25 @@ export function ProductForm({ mode, productId, initialValues }: Props) {
     setUploading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.set("file", file);
-    const response = await fetch("/api/vendor/products/upload-image", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await response.json();
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+      const response = await fetch("/api/vendor/products/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await parseJsonResponse(response);
 
-    if (!response.ok) {
-      setError(data.error ?? "Image upload failed.");
-    } else {
-      setImages((prev) => [...prev, data.url]);
+      if (!response.ok) {
+        setError(data.error ?? `Image upload failed (${response.status}).`);
+      } else {
+        setImages((prev) => [...prev, data.url as string]);
+      }
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   function removeImage(url: string) {
@@ -79,21 +85,26 @@ export function ProductForm({ mode, productId, initialValues }: Props) {
         : `/api/vendor/products/${productId}`;
     const method = mode === "create" ? "POST" : "PATCH";
 
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await parseJsonResponse(response);
 
-    if (!response.ok) {
-      setError(data.error ?? "Something went wrong.");
+      if (!response.ok) {
+        setError(data.error ?? `Something went wrong (${response.status}).`);
+        return;
+      }
+
+      router.push("/vendor/products");
+      router.refresh();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
       setPending(false);
-      return;
     }
-
-    router.push("/vendor/products");
-    router.refresh();
   }
 
   return (

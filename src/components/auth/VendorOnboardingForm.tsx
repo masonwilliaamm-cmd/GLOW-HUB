@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { parseJsonResponse } from "@/lib/parseJsonResponse";
 import styles from "./AuthForm.module.css";
 
 export function VendorOnboardingForm() {
@@ -24,21 +25,26 @@ export function VendorOnboardingForm() {
       payoutAccountDetails: formData.get("payoutAccountDetails"),
     };
 
-    const response = await fetch("/api/vendor/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
+    try {
+      const response = await fetch("/api/vendor/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await parseJsonResponse(response);
 
-    if (!response.ok) {
-      setError(data.error ?? "Something went wrong.");
+      if (!response.ok) {
+        setError(data.error ?? `Something went wrong (${response.status}).`);
+        return;
+      }
+
+      router.push(data.redirectTo as string);
+      router.refresh();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
       setPending(false);
-      return;
     }
-
-    router.push(data.redirectTo);
-    router.refresh();
   }
 
   return (
