@@ -20,7 +20,7 @@ cp .env.example .env.local   # fill in DATABASE_URL, REDIS_URL, etc.
 npm run dev
 ```
 
-You'll need a local PostgreSQL instance and Redis instance running (or point `.env.local` at hosted ones) for `db:migrate`/`db:seed` and the Redis client to connect.
+You'll need a local PostgreSQL instance and Redis instance running (or point `.env.local` at hosted ones, e.g. Railway's public connection strings) for `db:migrate`/`db:seed` and the Redis client to connect.
 
 ## Scripts
 
@@ -36,30 +36,38 @@ You'll need a local PostgreSQL instance and Redis instance running (or point `.e
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, and build on every push/PR.
 
-## Deployment (Vercel)
+## Deployment (Railway)
 
-The app is hosted on Vercel (see `docs/decisions.md`), which gives every PR a
-live preview URL automatically once the repo is connected.
+The app, Postgres, and Redis are all hosted on Railway (see
+`docs/decisions.md` — switched from Vercel/Neon/Upstash). Railway builds this
+repo with [Nixpacks](https://nixpacks.com/), which auto-detects the Next.js
+project: `npm install` (runs `postinstall` → `prisma generate`), `npm run
+build`, then `npm start` (`next start`). No Railway-specific build config is
+needed — `next start` already reads the `PORT` env var Railway injects.
 
-Preview deployments use one shared dev database — Neon (Postgres) + Upstash
-(Redis), see `docs/decisions.md` — not isolated per PR, but simplest to set
-up and good enough for visual/functional review.
+**One thing that did need a code change:** `next/image` optimization
+requires the `sharp` package at runtime on any self-hosted Node server
+(Vercel's own infrastructure handles this instead, so it wasn't needed
+there). Already added as a dependency.
 
-**One-time setup (do this in the Vercel dashboard — needs your Vercel account):**
+**One-time setup (do this in the Railway dashboard — needs your Railway account):**
 
-1. [vercel.com/new](https://vercel.com/new) → Import the `masonwilliaamm-cmd/GLOW-HUB` GitHub repo. Vercel auto-detects Next.js; no build command changes needed.
-2. Before or after connecting: run the migration and seed against the real database from a machine with normal internet access (this couldn't be done from within the Claude Code sandbox that built this repo — its network policy blocks outbound connections to arbitrary hosts like Neon/Upstash):
+1. New Project → Deploy from GitHub repo → select `masonwilliaamm-cmd/GLOW-HUB`.
+2. Add a **Postgres** and a **Redis** plugin to the same project.
+3. On the app service's **Variables** tab, reference the plugins' connection strings rather than copy-pasting them, so they stay in sync if Railway ever rotates credentials: `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`, `REDIS_URL` = `${{Redis.REDIS_URL}}` (exact reference names may differ slightly — Railway autocompletes these). Add `AUTH_SECRET` as a plain value.
+4. Run the migration and seed against the real database from a machine with normal internet access (this couldn't be done from within the Claude Code sandbox that built this repo — its network policy blocks outbound connections to arbitrary hosts):
    ```bash
    npm install
-   cp .env.example .env.local   # then set DATABASE_URL to the Neon connection string
+   cp .env.example .env.local   # then set DATABASE_URL to Postgres's public connection string
    npx prisma migrate deploy    # applies the existing migrations (not `migrate dev`)
    npm run db:seed              # optional — same fake data this repo uses locally
    ```
-   If either command errors while connected through Neon's pooled endpoint (hostname contains `-pooler`), swap `DATABASE_URL` to the unpooled connection string just for that command (same Neon dashboard), then switch back — Prisma Migrate's advisory locks commonly don't work through a transaction pooler.
-3. In the Vercel project's **Settings → Environment Variables**, add these scoped to **Preview**: `DATABASE_URL` (Neon's pooled connection string — that one's fine for the running app), `REDIS_URL` (Upstash — see below), `AUTH_SECRET`.
-   - **Redis note:** use a `rediss://default:<token>@<host>:6379` connection string, not Upstash's `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` pair — this app's Redis client (`ioredis`) speaks the standard Redis protocol over TCP, not Upstash's HTTPS REST API. Both forms authenticate against the same database; grab the `rediss://` one from Upstash's console (Redis protocol / "Connect" tab, not the REST API tab).
-4. Deploy. Every PR against this repo now gets its own preview deployment automatically, and Vercel posts the URL as a check/comment on the PR — no extra config needed per PR.
+   Use the plugin's **public** connection string for this (Postgres/Redis's "Connect" tab → public/TCP proxy host, not the `*.railway.internal` one) — the internal hostname only resolves from inside Railway's own network, not from your machine or this Claude Code sandbox. The running app itself can use either; the internal one is slightly faster/more private if you switch to it later.
+5. Deploy.
 
-Keep **Production** environment variables unset (or pointed at a separate
-production DB) until you're actually ready to go live — don't reuse the
-shared dev database for Production.
+**On PR preview links specifically** (the original ask that started this
+thread): Railway's per-PR preview environments work differently from
+Vercel's zero-config default — check Railway's project settings for
+"PR Environments" and confirm it's enabled/available on your plan. I haven't
+verified this from here since it's a Railway-dashboard setting, not
+something in this repo.
