@@ -1,0 +1,55 @@
+.card {
+  display: block;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f4f4f4;
+}
+
+.imageWrap img {
+  object-fit: cover;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.vendor {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.price {
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.75rem;
+  color: #b3261e;
+}
