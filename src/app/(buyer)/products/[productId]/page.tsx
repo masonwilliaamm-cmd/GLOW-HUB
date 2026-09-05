@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { findPublicProduct } from "@/lib/products";
 import { categoryLabel } from "@/lib/categories";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { CartLink } from "@/components/cart/CartLink";
 
 export default async function ProductPage(
   props: PageProps<"/products/[productId]">,
@@ -14,6 +16,10 @@ export default async function ProductPage(
 
   return (
     <main style={{ padding: "2rem", maxWidth: "40rem", margin: "0 auto" }}>
+      <p>
+        <CartLink />
+      </p>
+
       {product.images.length > 0 ? (
         <div
           style={{
@@ -66,6 +72,10 @@ export default async function ProductPage(
       <p>
         {product.stockStatus === "IN_STOCK" ? "In stock" : "Out of stock"}
       </p>
+      <AddToCartButton
+        productId={product.id}
+        disabled={product.stockStatus === "OUT_OF_STOCK"}
+      />
       <p>{product.description}</p>
       <p>
         Sold by{" "}

@@ -24,6 +24,9 @@ export default async function AccountPage() {
       <p>
         <Link href="/shop">Browse the shop</Link>
       </p>
+      <p>
+        <Link href="/orders">My orders</Link>
+      </p>
       <LogoutButton />
     </main>
   );

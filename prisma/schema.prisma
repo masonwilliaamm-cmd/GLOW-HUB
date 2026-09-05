@@ -109,8 +109,17 @@ model Order {
   product     Product       @relation(fields: [productId], references: [id])
   quantity    Int
   totalAmount Decimal       @db.Decimal(12, 2)
-  status      OrderStatus   @default(PENDING_PAYMENT)
-  createdAt   DateTime      @default(now())
+
+  // Nullable rather than required: added in Phase 4, after Phase 1 had
+  // already seeded Order rows without this data. Always populated by the
+  // checkout flow going forward.
+  shippingAddress String?
+  shippingCity    String?
+  shippingState   String?
+  contactPhone    String?
+
+  status    OrderStatus @default(PENDING_PAYMENT)
+  createdAt DateTime    @default(now())
 
   escrowTransaction EscrowTransaction?
   dispatchProofs    DispatchProof[]
